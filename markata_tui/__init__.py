@@ -152,12 +152,6 @@ class Posts(Widget):
     def update_markata(self, markata):
         self.m = markata
 
-    # def render(self):
-    #     return self.__rich__()
-
-    # async def update(self, renderable: RenderableType) -> None:
-    #     self.refresh()
-
 
 class MarkataWidget(Widget):
     def __init__(self, markata: Markata, widget: str = "server"):
@@ -168,10 +162,6 @@ class MarkataWidget(Widget):
 
     def render(self):
         return self.renderable
-
-    # async def update(self, renderable: RenderableType) -> None:
-    #     self.renderable = renderable
-    #     self.refresh()
 
 
 class MarkataApp(App):
