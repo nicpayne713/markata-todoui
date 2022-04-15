@@ -2,7 +2,7 @@ import itertools
 import subprocess
 from enum import Enum, auto
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Iterable, Optional
 
 import frontmatter
 from markata import Markata
@@ -19,43 +19,39 @@ __version__ = "0.0.1"
 
 
 class Status(Enum):
+    "The allowed status's of a todo"
     todo = auto()
     doing = auto()
     done = auto()
 
-    def next(self):
+    def next(self) -> "Status":
         if self.value == len(self._member_names_):
             return Status(1)
         else:
             return Status(self.value + 1)
 
-    def previous(self):
+    def previous(self) -> "Status":
         if self.value == 1:
             return Status(len(self._member_names_))
         else:
             return Status(self.value - 1)
 
 
-def nth(iterable, n, default=None):
-    "Returns the nth item or a default value"
-    return next(islice(iterable, n, None), default)
-
-
-def keys_on_file(post):
+def keys_on_file(post: frontmatter.Post) -> Dict:
     return {key: post[key] for key in frontmatter.load(post.get("path")).keys()}
 
 
 class Preview(Widget):
-    def __init__(self, text):
+    def __init__(self, text: str) -> None:
         super().__init__("preview")
         self.text = text
 
-    def render(self):
+    def render(self) -> Panel:
         return Panel(Markdown(self.text))
 
 
 class Posts(Widget):
-    def __init__(self, markata: "Markata", title: str, filter: str):
+    def __init__(self, markata: "Markata", title: str, filter: str) -> None:
         super().__init__(title)
         self.m = markata
         self.title = title
@@ -100,7 +96,7 @@ class Posts(Widget):
             border_style=self.border_style,
         )
 
-    def get_current_post(self):
+    def get_current_post(self) -> Optional[frontmatter.Post]:
         for i, post in enumerate(
             sorted(
                 self.m.filter(self.filter), key=lambda x: x["priority"], reverse=True
@@ -110,7 +106,7 @@ class Posts(Widget):
                 return post
         return None
 
-    def move_next(self):
+    def move_next(self) -> None:
 
         post = self.get_current_post()
         path = Path(post["path"])
@@ -195,8 +191,6 @@ class MarkataApp(App):
         await self.bind("n", "new_post", "new_post")
 
     async def action_refresh(self) -> None:
-        # self.refresh()
-        # self.m = Markata()
         self.m.glob()
         self.m.load()
         self.todos.refresh()
@@ -219,7 +213,6 @@ class MarkataApp(App):
         self.current = next(self.stacks)
         self.current.is_selected = True
         self.preview.text = self.current.text() or ""
-        # self.action_refresh()
 
     async def action_move_previous(self) -> None:
         self.current.move_previous()
@@ -230,7 +223,6 @@ class MarkataApp(App):
         self.current = next(self.stacks)
         self.current.is_selected = True
         self.preview.text = self.current.text() or ""
-        # self.action_refresh()
 
         self.todos.refresh()
         self.doing.refresh()
@@ -246,7 +238,6 @@ class MarkataApp(App):
         self.current.refresh()
         self.preview.text = self.current.text() or ""
         self.preview.refresh()
-        # self.action_refresh()
 
     async def action_lower_priority(self) -> None:
         self.current.lower_priority()
@@ -257,7 +248,6 @@ class MarkataApp(App):
         self.current.refresh()
         self.preview.text = self.current.text() or ""
         self.preview.refresh()
-        # self.action_refresh()
 
     async def action_prev_post(self) -> None:
         self.current.row_selected -= 1
@@ -299,7 +289,7 @@ class MarkataApp(App):
 
 
 @hook_impl()
-def cli(app, markata):
+def cli(app, markata) -> None:
     @app.command()
     def todoui():
         MarkataApp.run(log="textual.log")
